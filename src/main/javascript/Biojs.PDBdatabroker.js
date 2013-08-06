@@ -141,14 +141,14 @@ Biojs.PDBdatabroker.Entry = Biojs.extend ( {
 		var self = this;
 		var d = Q.defer();
 		jQuery.ajax({
-			url: self.apiURL+"/mappings/to_uniprot/entry/"+self.pid,
+			url: self.apiURL+"/mappings/sequence_domains/entry/"+self.pid,
 			data: {varname:'t'}, dataType: 'script', crossDomain: true, type: 'GET',
 			success: function(response, callOptions) {
-				console.log("mappings/to_uniprot resulted in", t);
+				console.log("mappings/sequence_domains resulted in", t);
 				t = t[self.pid];
 				jQuery.each(self.entities, function(ei,ent) {
 					if(!(ent.getEid() in t)) return;
-					jQuery.each(t[ent.getEid()], function(si,seg) {
+					jQuery.each(t[ent.getEid()]["uniprot"], function(si,seg) {
 						ent.addUniprotMapping(seg,"accession");
 					});
 				});
@@ -164,15 +164,14 @@ Biojs.PDBdatabroker.Entry = Biojs.extend ( {
 		var self = this;
 		var d = Q.defer();
 		jQuery.ajax({
-			url: self.apiURL+"/mappings/to_pfam/entry/"+self.pid,
+			url: self.apiURL+"/mappings/sequence_domains/entry/"+self.pid,
 			data: {varname:'t'}, dataType: 'script', crossDomain: true, type: 'GET',
 			success: function(response, callOptions) {
-				console.log("mappings/to_pfam resulted in", t);
+				console.log("mappings/sequence_domains resulted in", t);
 				t = t[self.pid];
 				jQuery.each(self.entities, function(ei,ent) {
 					if(!(ent.getEid() in t)) return;
-					jQuery.each(t[ent.getEid()], function(si,seg) {
-						if(!(ent.getEid() in t)) return;
+					jQuery.each(t[ent.getEid()]["pfam"], function(si,seg) {
 						ent.addPfamMapping(seg,"pfam_accession");
 					});
 				});
@@ -274,6 +273,8 @@ Biojs.PDBdatabroker.Entity = Biojs.extend ( {
 	isType: function(type) {
 		var self = this;
 		if(self.data.polymer_type == 'P' && type == "protein") return true;
+		if(self.data.polymer_type == 'R' && type == "RNA") return true;
+		if(self.data.polymer_type == 'DNA' && type == "D") return true;
 		return false;
 	},
 	getEid: function() {

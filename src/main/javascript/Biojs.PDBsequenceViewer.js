@@ -172,7 +172,7 @@ Biojs.BasicSequencePainter = Biojs.extend({
 	getRangediffForSeqfont: function() {
 		// at which range will i have a fontsize >= lesser_of(10,charheight)?
 		var self = this;
-		var rd = self.index2coordinate(0), minfontsize=10;
+		var rd = self.index2coordinate(0), minfontsize=25;
 		var charwidth = rd.stopx-rd.startx, charheight = rd.stopy-rd.starty;
 		if(minfontsize > charheight) minfontsize = charheight;
 		rangediff = charwidth * self.seqlen / minfontsize;

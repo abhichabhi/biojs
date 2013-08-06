@@ -32,7 +32,22 @@ Biojs.MmcifViewer = Biojs.extend (
 	constructor: function (options) {
 		var self = this;
 		// make the top table with all categories listed
-		jQuery("#"+options.divid).html( '<table cellpadding="0" cellspacing="0" border="0" class="display" id="catlistTable"></table><br><br><hr><br><br> <table cellpadding="0" cellspacing="0" border="0" class="display" id="categoryTable"></table><br>' );
+		//jQuery("#"+options.divid).html( '<table cellpadding="0" cellspacing="0" border="0" class="display" id="catlistTable"></table><br><br><hr><br><br> <table cellpadding="0" cellspacing="0" border="0" class="display" id="categoryTable"></table><br>' );
+		//jQuery("#"+options.divid).html( '\
+			//<table><tr><td width=400px>\
+			//<table cellpadding="0" cellspacing="0" border="0" class="display" id="catlistTable"></table>\
+			//</td><td width=600px>\
+			//<table cellpadding="0" cellspacing="0" border="0" class="display" id="categoryTable"></table><br>\
+			//</td></tr></table>\
+		//');
+		jQuery("#"+options.divid).html( '\
+			<span style="width:400px;height:800px;overflow:auto;float:left;">\
+			<table cellpadding="0" cellspacing="0" border="0" class="display" id="catlistTable"></table>\
+			</span>\
+			<span style="width:800px;height:800px;overflow:auto;float:left;">\
+			<table cellpadding="0" cellspacing="0" border="0" class="display" id="categoryTable"></table><br>\
+			</span>\
+		');
 		self.pdbid = options.pdbid;
 		self.catable = null;
 		jQuery.ajax({
@@ -49,8 +64,12 @@ Biojs.MmcifViewer = Biojs.extend (
 		var self = this;
 		for(var ci=0; ci < catlist.length; ci++) catlist[ci] = [catlist[ci]];
  		var dtable = jQuery('#catlistTable').dataTable( {
-        	"aaData": catlist,
-        	"aoColumns": [ { "sTitle": "Categories" } ]
+			"bScrollCollapse":false,
+			"bAutoWidth":false,
+			"bLengthChange":false,
+			"sScrollX":"200px",
+			"sScrollY":"400px",
+        	"aaData": catlist, "aoColumns": [ { "sTitle": "Categories" } ]
 		} );
 		dtable.$('td').click( function () {
 			var sData = dtable.fnGetData( this );
@@ -93,7 +112,8 @@ Biojs.MmcifViewer = Biojs.extend (
 		if(self.catable!=null) { self.catable.fnDestroy(); jQuery("#categoryTable").html(""); }
 		//self.catable = null;
  		self.catable = jQuery('#categoryTable').dataTable( {
-        	"aaData": rows, "aoColumns": colinfo, bDestroy:true //, "bRetrieve": true, "bDestroy": true
+        	"aaData": rows, "aoColumns": colinfo, bDestroy:true,
+			"bAutoWidth":false
 		} );
 	},
 

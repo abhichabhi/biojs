@@ -67,27 +67,15 @@ Biojs.PDBsequenceLayout = Biojs.extend (
 						}
 					]
 				});
-				//mytracks.push({
-					//height:20, painters:[
-						//{ type:'Biojs.DomainPainter', seqlen:elen, numIndicesInRow:elen,
-							//domains:[
-								//{
-									//ranges:[[0,elen-1]], ypos:{midpercent:80}, attribs:{fill:'none',stroke:'none'},
-									//tooltip:{common:'yes',text:'Sequence'}, sequence:eseq
-								//},
-							//]
-						//}
-					//]
-				//});
 				mytracks.push({
 					height:50, painters:[
 						{ type:'Biojs.DomainPainter', seqlen:elen, numIndicesInRow:elen,
 							domains:[
 								{
-									ranges:[[0,elen-1]], ypos:{midpercent:20}, attribs:{fill:'green',stroke:null},
+									ranges:[[0,elen-1]], ypos:{midpercent:80}, attribs:{fill:'green',stroke:null},
 									tooltip:{common:'yes',text:'ent ' + ent.getEid()}, glowOnHover:{fill:'blue'}
 								},
-							].concat(self.makePfamDomsForEntity(ent))
+							]
 						},
 						{ type:'Biojs.DomainPainter', seqlen:elen, numIndicesInRow:elen,
 							domains:[
@@ -99,23 +87,42 @@ Biojs.PDBsequenceLayout = Biojs.extend (
 						}
 					]
 				});
-				mytracks.push({
-					height:50, painters:[
-						{ type:'Biojs.DomainPainter', seqlen:elen, numIndicesInRow:elen,
-							domains:self.makeUnpdomForEntity(ent)
-						}
-					]
-				});
+				var pfdoms = self.makePfamDomsForEntity(ent)
+				if(pfdoms.length > 0)
+					mytracks.push({
+						height:20, painters:[
+							{ type:'Biojs.DomainPainter', seqlen:elen, numIndicesInRow:elen, domains:pfdoms }
+						]
+					});
+				var unpdoms = self.makeUnpdomForEntity(ent);
+				if(unpdoms.length > 0)
+					mytracks.push({
+						height:20, painters:[
+							{ type:'Biojs.DomainPainter', seqlen:elen, numIndicesInRow:elen, domains:unpdoms }
+						]
+					});
 				for(var chi=0; chi < ent.instances.length; chi++) {
 					var chain = ent.instances[chi];
-					var obsranges = chain.getObservedRanges();
 					mytracks.push({
 						height:50, painters:[
 							{ type:'Biojs.DomainPainter', seqlen:elen, numIndicesInRow:elen,
-								domains:self.makeDomsForChain(ent, chain)
+								domains:self.makeObsDomsForChain(ent, chain).concat( [{
+									ranges:[[0,elen-1]], ypos:{midpercent:80}, attribs:{fill:'none',stroke:'none'},
+									tooltip:{common:'yes',text:'Sequence'}, sequence:eseq
+								}] ),
 							}
 						]
 					});
+					var cathdoms = self.makeCathDomsForChain(ent,chain);
+					if(cathdoms.length > 0)
+						mytracks.push({
+							height:20, painters:[ { type:'Biojs.DomainPainter', seqlen:elen, numIndicesInRow:elen, domains:cathdoms } ]
+						});
+					var scopdoms = self.makeScopDomsForChain(ent,chain);
+					if(scopdoms.length > 0)
+						mytracks.push({
+							height:20, painters:[ { type:'Biojs.DomainPainter', seqlen:elen, numIndicesInRow:elen, domains:scopdoms } ]
+						});
 				}
 				var adivid = self.divid+"_"+ei;
 				jQuery("#"+self.divid).append("<div id='"+adivid+"'></div>");
@@ -124,19 +131,20 @@ Biojs.PDBsequenceLayout = Biojs.extend (
 		} );
 	},
 
-	makeDomsForChain: function(ent, chain) {
-		var ret = [];
-		// observed
-		var obsranges = [];
+	makeObsDomsForChain: function(ent, chain) {
+		var obsranges = [], ret = [];
 		jQuery.each(chain.getObservedRanges(), function(ri,rg) {
 			obsranges.push([rg.pdb_start-1,rg.pdb_end-1]);
 		});
 		ret.push( {
-				ranges:obsranges, ypos:{rangepercent:[35,65]}, attribs:{fill:'blue',stroke:null},
+				ranges:obsranges, ypos:{midpercent:80}, attribs:{fill:'blue',stroke:null,opacity:0.5},
 				tooltip:{common:'yes',text:'chain ' + chain.getAuthAsymId()}, glowOnHover:{fill:'gold'}
 		});
-		// cath
-		var cathranges = chain.getCathRanges();
+		return ret;
+	},
+
+	makeCathDomsForChain: function(ent, chain) {
+		var cathranges = chain.getCathRanges(), ret = [];
 		if(cathranges) {
 			jQuery.each(cathranges, function(ci,cdata) {
 				var cranges = [];
@@ -144,13 +152,16 @@ Biojs.PDBsequenceLayout = Biojs.extend (
 					cranges.push( [rd.pdb_start-1, rd.pdb_end-1] );
 				} );
 				ret.push( {
-					ranges:cranges, ypos:{rangepercent:[25,45]}, attribs:{fill:'cyan',stroke:null},
+					ranges:cranges, ypos:{rangepercent:[10,90]}, attribs:{fill:'cyan',stroke:null},
 					tooltip:{common:'yes',text:'cath ' + cdata.cath_superfamily}, glowOnHover:{fill:'silver'}
 				} );
 			} );
 		}
-		// scop
-		var scopranges = chain.getScopRanges();
+		return ret;
+	},
+
+	makeScopDomsForChain: function(ent, chain) {
+		var scopranges = chain.getScopRanges(), ret = [];
 		if(scopranges) {
 			jQuery.each(scopranges, function(ci,cdata) {
 				var cranges = [];
@@ -158,7 +169,7 @@ Biojs.PDBsequenceLayout = Biojs.extend (
 					cranges.push( [rd.pdb_start-1, rd.pdb_end-1] );
 				} );
 				ret.push( {
-					ranges:cranges, ypos:{rangepercent:[55,75]}, attribs:{fill:'violet',stroke:null},
+					ranges:cranges, ypos:{rangepercent:[10,90]}, attribs:{fill:'violet',stroke:null},
 					tooltip:{common:'yes',text:'scop ' + cdata.scop_family}, glowOnHover:{fill:'grey'}
 				} );
 			} );
@@ -177,7 +188,7 @@ Biojs.PDBsequenceLayout = Biojs.extend (
 				pfranges.push([ur.pdb_start-1,ur.pdb_end-1]);
 			});
 			pfdoms.push( {
-				ranges:pfranges, ypos:{midpercent:60}, attribs:{fill:'green',stroke:null,opacity:0.3},
+				ranges:pfranges, ypos:{midpercent:80}, attribs:{fill:'green',stroke:null,opacity:0.3},
 				tooltip:{common:'yes',text:'pfam accession '+pfid}, glowOnHover:{fill:'magenta'}, displayname:pfid
 			} );
 		}
@@ -194,7 +205,7 @@ Biojs.PDBsequenceLayout = Biojs.extend (
 				uranges.push([ur.pdb_start-1,ur.pdb_end-1]);
 			});
 			unpdoms.push( {
-				ranges:uranges, ypos:{midpercent:60}, attribs:{fill:'red',stroke:null,opacity:0.3},
+				ranges:uranges, ypos:{midpercent:80}, attribs:{fill:'red',stroke:null,opacity:0.3},
 				tooltip:{common:'yes',text:'uniprot accession '+unp}, glowOnHover:{fill:'blue'}, displayname:unp
 			} );
 		}
